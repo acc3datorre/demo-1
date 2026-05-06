@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Automate – Demo CFO · Consolidación de Reportes Regionales</title>
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pa-blue: #0f6cbd;
+    --pa-blue-dark: #0c3b5e;
+    --pa-blue-light: #cce3f5;
+    --pa-purple: #7719aa;
+    --pa-green: #107c10;
+    --pa-orange: #ca5010;
+    --pa-gray: #f3f2f1;
+    --pa-gray2: #edebe9;
+    --pa-gray3: #d2d0ce;
+    --pa-text: #242424;
+    --pa-text2: #605e5c;
+    --pa-white: #ffffff;
+    --pa-border: #e1dfdd;
+    --pa-success: #107c10;
+    --pa-running: #0078d4;
+    --connector-h: 72px;
+    --line-color: #c8c6c4;
+    --step-w: 320px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0eff0;
+    color: var(--pa-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP BAR ─────────────────────────────────────── */
+  .topbar {
+    background: #1a1a2e;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #ccc;
+    font-weight: 400;
+    text-decoration: none;
+  }
+  .pa-icon {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pa-icon svg { width: 16px; height: 16px; fill: white; }
+  .topbar-sep { color: #444; font-size: 18px; }
+  .topbar-title { color: #fff; font-size: 13px; font-weight: 500; }
+  .topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn-topbar {
+    padding: 5px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+  }
+  .btn-test {
+    background: var(--pa-blue);
+    color: white;
+  }
+  .btn-test:hover { background: #0c5aa0; }
+  .btn-save {
+    background: transparent;
+    color: #ccc;
+    border: 1px solid #444;
+  }
+  .btn-save:hover { background: #333; color: white; }
+  .btn-run {
+    background: linear-gradient(90deg, #0078d4, #7719aa);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: opacity .15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-run:hover { opacity: .9; }
+  .btn-run.running { opacity: .6; cursor: not-allowed; }
+
+  /* ─── SUBNAV ─────────────────────────────────────── */
+  .subnav {
+    background: #fff;
+    border-bottom: 1px solid var(--pa-border);
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 4px;
+  }
+  .subnav-tab {
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--pa-text2);
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    position: relative;
+  }
+  .subnav-tab.active {
+    color: var(--pa-blue);
+    font-weight: 500;
+  }
+  .subnav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 12px; right: 12px;
+    height: 2px;
+    background: var(--pa-blue);
+    border-radius: 1px;
+  }
+
+  /* ─── MAIN LAYOUT ─────────────────────────────────── */
+  .layout {
+    display: flex;
+    height: calc(100vh - 88px);
+    overflow: hidden;
+  }
+
+  /* ─── CANVAS ─────────────────────────────────────── */
+  .canvas {
+    flex: 1;
+    overflow: auto;
+    background: #f8f7f6;
+    background-image: radial-gradient(#d8d6d4 1px, transparent 1px);
+    background-size: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 60px;
+    position: relative;
+  }
+
+  .flow-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .flow-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--pa-text);
+    margin-bottom: 4px;
+  }
+  .flow-subtitle {
+    font-size: 12px;
+    color: var(--pa-text2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .flow-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #c8c6c4;
+    transition: background .3s;
+  }
+  .flow-status-dot.active { background: var(--pa-success); box-shadow: 0 0 0 3px rgba(16,124,16,.2); }
+  .flow-status-dot.running { background: var(--pa-running); animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,120,212,.4); }
+    50% { box-shadow: 0 0 0 6px rgba(0,120,212,0); }
+  }
+
+  /* ─── FLOW STEPS ─────────────────────────────────── */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: var(--step-w);
+  }
+
+  .step-card {
+    width: var(--step-w);
+    background: #fff;
+    border: 1.5px solid var(--pa-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .step-card:hover {
+    border-color: var(--pa-blue);
+    box-shadow: 0 2px 12px rgba(0,120,212,.2);
+    transform: translateY(-1px);
+  }
+  .step-card.selected {
+    border-color: var(--pa-blue);
+    box-shadow: 0 0 0 2px rgba(0,120,212,.25), 0 2px 12px rgba(0,0,0,.1);
+  }
+  .step-card.running-step {
+    border-color: var(--pa-running);
+    animation: stepPulse 0.8s ease-in-out infinite;
+  }
+  .step-card.done-step {
+    border-color: var(--pa-success);
+  }
+  .step-card.error-step {
+    border-color: var(--pa-orange);
+  }
+
+  @keyframes stepPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,120,212,.3); }
+    50% { box-shadow: 0 0 0 8px rgba(0,120,212,0); }
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    gap: 10px;
+    min-height: 52px;
+  }
+  .step-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+  .step-label {
+    flex: 1;
+  }
+  .step-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--pa-text2);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .step-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--pa-text);
+    line-height: 1.3;
+  }
+  .step-status-icon {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity .3s;
+    flex-shrink: 0;
+  }
+  .step-status-icon.show { opacity: 1; }
+  .status-running { background: rgba(0,120,212,.15); color: var(--pa-running); }
+  .status-done { background: rgba(16,124,16,.15); color: var(--pa-success); }
+  .status-error { background: rgba(202,80,16,.15); color: var(--pa-orange); }
+
+  .step-body {
+    border-top: 1px solid var(--pa-border);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--pa-text2);
+    background: #faf9f8;
+    display: none;
+  }
+  .step-card.selected .step-body,
+  .step-card.done-step .step-body,
+  .step-card.running-step .step-body { display: block; }
+
+  .step-param {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 5px;
+    align-items: flex-start;
+  }
+  .param-key {
+    color: var(--pa-text2);
+    min-width: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .param-val {
+    color: var(--pa-text);
+    font-size: 11px;
+    background: #f0f0f0;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', monospace;
+  }
+  .param-val.dynamic {
+    background: #eef4fb;
+    color: var(--pa-blue);
+    border: 1px solid #c5d8ef;
+  }
+
+  /* ─── CONNECTOR LINES ────────────────────────────── */
+  .connector-line {
+    width: 2px;
+    height: 28px;
+    background: var(--line-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .connector-line::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid var(--line-color);
+    left: -4px;
+  }
+  .connector-line.active {
+    background: var(--pa-running);
+    animation: lineFlow .6s linear infinite;
+  }
+  .connector-line.active::before { border-top-color: var(--pa-running); }
+  .connector-line.done { background: var(--pa-success); }
+  .connector-line.done::before { border-top-color: var(--pa-success); }
+
+  @keyframes lineFlow {
+    0% { background: linear-gradient(var(--pa-running), var(--pa-blue)); }
+    100% { background: linear-gradient(var(--pa-blue), var(--pa-running)); }
+  }
+
+  /* add-step button */
+  .add-step-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 1.5px solid var(--line-color);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--pa-text2);
+    margin: -2px 0;
+    z-index: 1;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .add-step-btn:hover {
+    border-color: var(--pa-blue);
+    color: var(--pa-blue);
+    background: #eef4fb;
+  }
+
+  /* scope brackets */
+  .scope-bracket {
+    width: var(--step-w);
+    border: 1.5px dashed var(--pa-gray3);
+    border-radius: 8px;
+    padding: 12px;
+    background: rgba(255,255,255,.5);
+    position: relative;
+    margin: 4px 0;
+  }
+  .scope-label {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: #f8f7f6;
+    padding: 0 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--pa-text2);
+    font-weight: 600;
+  }
+
+  /* condition fork */
+  .condition-fork {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .condition-branch {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .branch-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .branch-yes { background: rgba(16,124,16,.12); color: var(--pa-success); }
+  .branch-no { background: rgba(202,80,16,.12); color: var(--pa-orange); }
+
+  .step-card-sm {
+    width: 100%;
+    min-width: 140px;
+    max-width: 200px;
+  }
+
+
+
+  /* --- BUSINESS PREVIEW PANEL: what the business user sees --- */
+  .business-panel {
+    width: 380px;
+    background: #ffffff;
+    border-left: 1px solid var(--pa-border);
+    overflow-y: auto;
+    flex-shrink: 0;
+    padding: 16px;
+  }
+  .bp-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--pa-text);
+    margin-bottom: 4px;
+  }
+  .bp-subtitle {
+    font-size: 11px;
+    color: var(--pa-text2);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+  .bp-stage {
+    border: 1px solid var(--pa-border);
+    border-radius: 10px;
+    background: #faf9f8;
+    margin-bottom: 12px;
+    overflow: hidden;
+    opacity: .55;
+    transition: all .25s ease;
+  }
+  .bp-stage.active {
+    opacity: 1;
+    border-color: var(--pa-blue);
+    box-shadow: 0 2px 14px rgba(0,120,212,.12);
+    transform: translateY(-1px);
+  }
+  .bp-stage.done { opacity: 1; border-color: #badbcc; }
+  .bp-stage-head {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-bottom: 1px solid var(--pa-border);
+    background:#fff;
+  }
+  .bp-icon {
+    width:24px; height:24px;
+    border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; color:white;
+    flex-shrink:0;
+  }
+  .bp-h { flex:1; }
+  .bp-kicker { font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:var(--pa-text2); font-weight:700; }
+  .bp-name { font-size:12px; font-weight:700; color:var(--pa-text); }
+  .bp-check { font-size:13px; color: var(--pa-success); opacity:0; }
+  .bp-stage.done .bp-check { opacity:1; }
+  .bp-body { padding:12px; }
+  .email-card {
+    border:1px solid #d2d0ce;
+    border-radius:8px;
+    background:#fff;
+    overflow:hidden;
+    font-size:11px;
+  }
+  .email-top { background:#f3f2f1; padding:8px 10px; border-bottom:1px solid #e1dfdd; }
+  .email-row { display:flex; gap:6px; margin-bottom:3px; }
+  .email-label { color:#605e5c; width:42px; flex-shrink:0; }
+  .email-body { padding:10px; line-height:1.45; color:#333; }
+  .attachment {
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:8px; padding:6px 8px;
+    border:1px solid #d2d0ce; border-radius:6px;
+    background:#f8fff8; font-weight:600; color:#217346;
+  }
+  .folder-list, .excel-table {
+    border:1px solid #d2d0ce; border-radius:8px; background:#fff; overflow:hidden; font-size:11px;
+  }
+  .folder-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #edebe9; }
+  .folder-row:last-child { border-bottom:none; }
+  .folder-path { font-family:Consolas,monospace; font-size:10px; color:#605e5c; margin-top:2px; }
+  .excel-table table { width:100%; border-collapse:collapse; }
+  .excel-table th, .excel-table td { border-bottom:1px solid #edebe9; padding:6px 7px; text-align:left; }
+  .excel-table th { background:#eaf6ea; color:#217346; font-weight:700; }
+  .excel-table tr:last-child td { border-bottom:none; }
+  .bp-note {
+    margin-top:8px; font-size:10px; line-height:1.35; color:#605e5c;
+    background:#eef4fb; border:1px solid #c5d8ef; border-radius:6px; padding:7px;
+  }
+  @media (max-width: 1180px) { .business-panel { display:none; } }
+
+  /* ─── SIDE PANEL ─────────────────────────────────── */
+  .side-panel {
+    width: 0;
+    background: #fff;
+    border-left: 1px solid var(--pa-border);
+    transition: width .25s ease;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .side-panel.open { width: 360px; }
+
+  .sp-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--pa-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sp-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--pa-text2);
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  .sp-close:hover { background: var(--pa-gray); }
+
+  .sp-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .sp-section {
+    margin-bottom: 20px;
+  }
+  .sp-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--pa-text2);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .sp-field {
+    margin-bottom: 10px;
+  }
+  .sp-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--pa-text2);
+    margin-bottom: 4px;
+  }
+  .sp-input {
+    width: 100%;
+    border: 1px solid var(--pa-gray3);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--pa-text);
+    background: #faf9f8;
+    resize: none;
+    transition: border-color .15s;
+  }
+  .sp-input:focus {
+    outline: none;
+    border-color: var(--pa-blue);
+    box-shadow: 0 0 0 2px rgba(0,120,212,.15);
+  }
+  .sp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .badge-trigger { background: #fce4ec; color: #c2185b; }
+  .badge-action { background: #e3f2fd; color: #1565c0; }
+  .badge-condition { background: #fff3e0; color: #e65100; }
+
+  .run-log {
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 6px;
+    padding: 12px;
+    line-height: 1.8;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .log-line { animation: fadeIn .3s ease; }
+  .log-ok { color: #4ec9b0; }
+  .log-run { color: #9cdcfe; }
+  .log-warn { color: #ce9178; }
+  .log-ts { color: #6a9955; margin-right: 6px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+
+  /* ─── TOOLBAR ─────────────────────────────────────── */
+  .canvas-toolbar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    border: 1px solid var(--pa-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.12);
+    font-size: 12px;
+    color: var(--pa-text2);
+  }
+  .toolbar-sep { width: 1px; height: 18px; background: var(--pa-gray3); }
+  .zoom-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--pa-text2);
+    font-size: 16px;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+  .zoom-btn:hover { background: var(--pa-gray); }
+
+  /* icons svg inline */
+  .ico { display: inline-block; vertical-align: middle; }
+
+  /* ─── RUN OVERLAY ─────────────────────────────────── */
+  .run-toast {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: #fff;
+    border: 1px solid var(--pa-border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    width: 280px;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all .3s;
+    pointer-events: none;
+  }
+  .run-toast.show {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .toast-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .toast-progress {
+    height: 4px;
+    background: var(--pa-gray2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .toast-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pa-blue), var(--pa-purple));
+    border-radius: 2px;
+    width: 0%;
+    transition: width .5s ease;
+  }
+  .toast-msg { font-size: 12px; color: var(--pa-text2); }
+
+  /* ─── HISTORY ─────────────────────────────────────── */
+  .run-history {
+    margin-top: 4px;
+  }
+  .history-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    border: 1px solid var(--pa-border);
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .history-row:hover { background: var(--pa-gray); }
+  .history-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hdot-ok { background: var(--pa-success); }
+  .hdot-err { background: var(--pa-orange); }
+  .history-name { flex: 1; color: var(--pa-text); }
+  .history-ts { color: var(--pa-text2); font-size: 11px; }
+  .history-dur { color: var(--pa-text2); font-size: 11px; min-width: 36px; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="pa-icon">
+      <svg viewBox="0 0 16 16"><path d="M2 3l5 3-5 3V3zm5 0h7v1.5H7V3zm0 4.5h7V9H7V7.5zM7 11h7v1.5H7V11z"/></svg>
+    </div>
+    <span>Power Automate</span>
+  </div>
+  <span class="topbar-sep">›</span>
+  <span class="topbar-sep" style="color:#777">Mis flujos</span>
+  <span class="topbar-sep">›</span>
+  <span class="topbar-title">Demo CFO · Consolidación de Reportes Regionales</span>
+  <div class="topbar-actions">
+    <button class="btn-topbar btn-save">💾 Guardar</button>
+    <button class="btn-topbar btn-test" onclick="openSidePanel('historial')">📋 Historial de ejecución</button>
+    <button class="btn-run" id="btnRun" onclick="startDemo()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M4 2l10 6-10 6V2z"/></svg>
+      Ejecutar demo
+    </button>
+  </div>
+</div>
+
+<!-- SUBNAV -->
+<div class="subnav">
+  <button class="subnav-tab active">Diseñador</button>
+  <button class="subnav-tab">Flujos de nube</button>
+  <button class="subnav-tab">Conexiones</button>
+  <button class="subnav-tab">Detalles</button>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- CANVAS -->
+  <div class="canvas" id="canvas">
+    <div class="flow-header">
+      <div class="flow-title">Demo CFO · Consolidación de Reportes Regionales</div>
+      <div style="font-size:12px;color:#605e5c;margin:2px 0 6px;max-width:520px;line-height:1.4;">Automatiza recepción, validación, consolidación y alertas del cierre mensual regional.</div>
+      <div class="flow-subtitle">
+        <div class="flow-status-dot" id="statusDot"></div>
+        <span id="statusLabel">Flujo activado · Demo de configuración paso a paso</span>
+      </div>
+    </div>
+
+    <div class="flow-container">
+
+      <!-- ① TRIGGER -->
+      <div class="step-card" id="step0" onclick="selectStep(0)">
+        <div class="step-header">
+          <div class="step-icon" style="background:#0078d4;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+            </svg>
+          </div>
+          <div class="step-label">
+            <div class="step-type">Disparador</div>
+            <div class="step-name">Cuando llega un correo con cierre mensual (V3)</div>
+          </div>
+          <div class="step-status-icon" id="si0"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-param">
+            <span class="param-key">Cuenta:</span>
+            <span class="param-val">cfo-office@empresa.com</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Asunto contiene:</span>
+            <span class="param-val dynamic">"Cierre mensual"</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Tiene adjunto:</span>
+            <span class="param-val dynamic">Sí</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Carpeta:</span>
+            <span class="param-val">Bandeja de entrada</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector-line" id="line0"></div>
+
+      <!-- ② GUARDAR EN SHAREPOINT -->
+      <div class="step-card" id="step1" onclick="selectStep(1)">
+        <div class="step-header">
+          <div class="step-icon" style="background:#038387;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM9 17v-2h6v2H9zm0-4v-2h6v2H9z"/>
+            </svg>
+          </div>
+          <div class="step-label">
+            <div class="step-type">Acción · SharePoint</div>
+            <div class="step-name">Guardar adjunto Excel en SharePoint</div>
+          </div>
+          <div class="step-status-icon" id="si1"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-param">
+            <span class="param-key">Sitio:</span>
+            <span class="param-val">CFO Office</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Ruta:</span>
+            <span class="param-val dynamic">/Cierres/@{formatDateTime(utcNow(),'MMMM-yyyy')}</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Nombre archivo:</span>
+            <span class="param-val dynamic">@{triggerOutputs()?['from']}_cierre.xlsx</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Contenido:</span>
+            <span class="param-val dynamic">Contenido real del adjunto Excel</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector-line" id="line1"></div>
+
+      <!-- ③ LEER CELDAS EXCEL -->
+      <div class="step-card" id="step2" onclick="selectStep(2)">
+        <div class="step-header">
+          <div class="step-icon" style="background:#217346;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+          </div>
+          <div class="step-label">
+            <div class="step-type">Acción · Excel Online</div>
+            <div class="step-name">Validar plantilla y listar KPIs estándar</div>
+          </div>
+          <div class="step-status-icon" id="si2"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-param">
+            <span class="param-key">Archivo:</span>
+            <span class="param-val dynamic">@{outputs('Crear_archivo')?['body/Id']}</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Tabla:</span>
+            <span class="param-val">KPIs_Regionales</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Columnas requeridas:</span>
+            <span class="param-val dynamic">Región · Ventas · EBITDA · Headcount · Comentarios</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Acción:</span>
+            <span class="param-val">Listar filas de tabla</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector-line" id="line2"></div>
+
+      <!-- ④ ESCRIBIR EN PLANILLA MAESTRA -->
+      <div class="step-card" id="step3" onclick="selectStep(3)">
+        <div class="step-header">
+          <div class="step-icon" style="background:#217346;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+          </div>
+          <div class="step-label">
+            <div class="step-type">Acción · Excel Online</div>
+            <div class="step-name">Actualizar planilla maestra de consolidación</div>
+          </div>
+          <div class="step-status-icon" id="si3"></div>
+        </div>
+        <div class="step-body">
+          <div class="step-param">
+            <span class="param-key">Archivo:</span>
+            <span class="param-val">Consolidado_CFO_Master.xlsx</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Tabla:</span>
+            <span class="param-val">Consolidado</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Región:</span>
+            <span class="param-val dynamic">@{variables('regionRemitente')}</span>
+          </div>
+          <div class="step-param">
+            <span class="param-key">Ventas:</span>
+            <span class="param-val dynamic">@{first(body('Listar_filas')?['value'])?['Ventas']}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector-line" id="line3"></div>
+
+      <!-- ⑤ CONDICIÓN: ¿7 REGIONES? -->
+      <div class="scope-bracket">
+        <div class="scope-label">Condición</div>
+        <div class="step-card" id="step4" onclick="selectStep(4)" style="margin-bottom:12px;">
+          <div class="step-header">
+            <div class="step-icon" style="background:#ca5010;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div class="step-label">
+              <div class="step-type">Control · Condición</div>
+              <div class="step-name">¿Cierre regional completo?</div>
+            </div>
+            <div class="step-status-icon" id="si4"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-param">
+              <span class="param-key">Variable:</span>
+              <span class="param-val dynamic">@{variables('regionesCompletadas')}</span>
+            </div>
+            <div class="step-param">
+              <span class="param-key">Operador:</span>
+              <span class="param-val">es igual a</span>
+            </div>
+            <div class="step-param">
+              <span class="param-key">Valor:</span>
+              <span class="param-val dynamic">7</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="condition-fork">
+          <!-- SÍ -->
+          <div class="condition-branch">
+            <div class="branch-label branch-yes">✓ Sí</div>
+            <div class="step-card step-card-sm" id="step5" onclick="selectStep(5)">
+              <div class="step-header" style="padding:10px 12px; min-height:46px;">
+                <div class="step-icon" style="background:#0078d4; width:26px; height:26px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <div class="step-label">
+                  <div class="step-type" style="font-size:9px;">Outlook</div>
+                  <div class="step-name" style="font-size:12px;">Notificar al CFO con consolidado</div>
+                </div>
+                <div class="step-status-icon" id="si5"></div>
+              </div>
+              <div class="step-body">
+                <div class="step-param">
+                  <span class="param-key">Para:</span>
+                  <span class="param-val">cfo@empresa.com</span>
+                </div>
+                <div class="step-param">
+                  <span class="param-key">Asunto:</span>
+                  <span class="param-val dynamic">✅ Cierre completo – @{formatDateTime(utcNow(),'MMMM yyyy')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NO -->
+          <div class="condition-branch">
+            <div class="branch-label branch-no">✗ No</div>
+            <div class="step-card step-card-sm" id="step6" onclick="selectStep(6)">
+              <div class="step-header" style="padding:10px 12px; min-height:46px;">
+                <div class="step-icon" style="background:#0078d4; width:26px; height:26px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </div>
+                <div class="step-label">
+                  <div class="step-type" style="font-size:9px;">Outlook</div>
+                  <div class="step-name" style="font-size:12px;">Recordatorio programado 5.º día hábil</div>
+                </div>
+                <div class="step-status-icon" id="si6"></div>
+              </div>
+              <div class="step-body">
+                <div class="step-param">
+                  <span class="param-key">Para:</span>
+                  <span class="param-val dynamic">@{variables('regionesFaltantes')}</span>
+                </div>
+                <div class="step-param">
+                  <span class="param-key">Asunto:</span>
+                  <span class="param-val dynamic">⏰ Recordatorio: Cierre pendiente</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /flow-container -->
+
+    <!-- CANVAS TOOLBAR -->
+    <div class="canvas-toolbar">
+      <button class="zoom-btn" title="Zoom out">−</button>
+      <span>100%</span>
+      <button class="zoom-btn" title="Zoom in">+</button>
+      <div class="toolbar-sep"></div>
+      <button class="zoom-btn" title="Ajustar pantalla">⊡</button>
+      <div class="toolbar-sep"></div>
+      <span style="font-size:11px;color:#888;">Outlook · SharePoint · Excel Online · Condiciones</span>
+    </div>
+  </div><!-- /canvas -->
+
+
+
+  <!-- BUSINESS PREVIEW PANEL -->
+  <aside class="business-panel" id="businessPanel">
+    <div class="bp-title">Vista de negocio</div>
+    <div class="bp-subtitle">Durante la demo, este panel muestra los artefactos que se generan o actualizan: correo entrante, SharePoint, Excel de origen, consolidado y correo final.</div>
+
+    <div class="bp-stage" id="bp0">
+      <div class="bp-stage-head"><div class="bp-icon" style="background:#0078d4;">✉</div><div class="bp-h"><div class="bp-kicker">Outlook</div><div class="bp-name">Correo recibido</div></div><div class="bp-check">✓</div></div>
+      <div class="bp-body">
+        <div class="email-card">
+          <div class="email-top">
+            <div class="email-row"><span class="email-label">De</span><strong>region-norte@empresa.com</strong></div>
+            <div class="email-row"><span class="email-label">Para</span><span>cfo-office@empresa.com</span></div>
+            <div class="email-row"><span class="email-label">Asunto</span><span>Cierre mensual Abril 2026</span></div>
+          </div>
+          <div class="email-body">Adjunto el cierre mensual de la Región Norte según plantilla estándar.<br><span class="attachment">📗 NORTE_Cierre_Abril.xlsx</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bp-stage" id="bp1">
+      <div class="bp-stage-head"><div class="bp-icon" style="background:#038387;">📁</div><div class="bp-h"><div class="bp-kicker">SharePoint</div><div class="bp-name">Archivo guardado</div></div><div class="bp-check">✓</div></div>
+      <div class="bp-body">
+        <div class="folder-list">
+          <div class="folder-row"><span>📂</span><div><strong>CFO Office</strong><div class="folder-path">/sites/CFO-Office</div></div></div>
+          <div class="folder-row"><span>📂</span><div><strong>Cierres / Abril-2026</strong><div class="folder-path">Biblioteca mensual</div></div></div>
+          <div class="folder-row"><span>📗</span><div><strong>NORTE_Cierre.xlsx</strong><div class="folder-path">Guardado automáticamente desde Outlook</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bp-stage" id="bp2">
+      <div class="bp-stage-head"><div class="bp-icon" style="background:#217346;">▦</div><div class="bp-h"><div class="bp-kicker">Excel origen</div><div class="bp-name">KPIs leídos</div></div><div class="bp-check">✓</div></div>
+      <div class="bp-body">
+        <div class="excel-table">
+          <table><thead><tr><th>Región</th><th>Ventas</th><th>EBITDA</th><th>HC</th></tr></thead><tbody><tr><td>Norte</td><td>$4.2M</td><td>$890K</td><td>342</td></tr></tbody></table>
+        </div>
+        <div class="bp-note">Validación: tabla <strong>KPIs_Regionales</strong> encontrada y campos obligatorios completos.</div>
+      </div>
+    </div>
+
+    <div class="bp-stage" id="bp3">
+      <div class="bp-stage-head"><div class="bp-icon" style="background:#217346;">📊</div><div class="bp-h"><div class="bp-kicker">Excel consolidado</div><div class="bp-name">Planilla maestra actualizada</div></div><div class="bp-check">✓</div></div>
+      <div class="bp-body">
+        <div class="excel-table">
+          <table><thead><tr><th>Región</th><th>Estado</th><th>Ventas</th><th>EBITDA</th></tr></thead><tbody><tr><td>Norte</td><td>Recibido</td><td>$4.2M</td><td>$890K</td></tr><tr><td>Centro</td><td>Pendiente</td><td>-</td><td>-</td></tr><tr><td>Sur</td><td>Pendiente</td><td>-</td><td>-</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="bp-stage" id="bp4">
+      <div class="bp-stage-head"><div class="bp-icon" style="background:#0078d4;">✉</div><div class="bp-h"><div class="bp-kicker">Outlook final</div><div class="bp-name">Notificación / recordatorio</div></div><div class="bp-check">✓</div></div>
+      <div class="bp-body">
+        <div class="email-card">
+          <div class="email-top">
+            <div class="email-row"><span class="email-label">Para</span><strong>CENTRO; SUR; PATAGONIA; CUYO</strong></div>
+            <div class="email-row"><span class="email-label">Asunto</span><span>Recordatorio: cierre mensual pendiente</span></div>
+          </div>
+          <div class="email-body">Aún no recibimos el cierre mensual de su región. Por favor enviar el Excel estándar antes del cierre del día hábil.</div>
+        </div>
+        <div class="bp-note">Si las 7 regiones estuvieran completas, este paso enviaría al CFO el link al consolidado final.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- SIDE PANEL -->
+  <div class="side-panel" id="sidePanel">
+    <div class="sp-header">
+      <div class="step-icon" id="spIcon" style="background:#0078d4; width:28px; height:28px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+      <div>
+        <div id="spBadge"></div>
+        <div id="spTitle" style="font-size:13px;font-weight:600;margin-top:2px;"></div>
+      </div>
+      <button class="sp-close" onclick="closeSidePanel()">✕</button>
+    </div>
+    <div class="sp-body" id="spBody"></div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="run-toast" id="runToast">
+  <div class="toast-title">
+    <span id="toastIcon">⚡</span>
+    <span id="toastTitle">Ejecutando flujo...</span>
+  </div>
+  <div class="toast-msg" id="toastMsg">Disparador detectado</div>
+  <div class="toast-progress">
+    <div class="toast-bar" id="toastBar"></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────
+const steps = [
+  {
+    id: 0,
+    type: 'Disparador',
+    badge: 'trigger',
+    name: 'Cuando llega un correo con cierre mensual (V3)',
+    connector: 'Microsoft Outlook',
+    color: '#0078d4',
+    desc: 'Monitorea la bandeja de entrada del CFO Office. Se activa cuando una región envía un email con asunto de cierre mensual y al menos un adjunto Excel. Este es el disparador que inicia todo el flujo sin intervención manual.',
+    fields: [
+      { label: 'Cuenta de correo', val: 'cfo-office@empresa.com' },
+      { label: 'Asunto contiene', val: '"Cierre mensual"', dynamic: true },
+      { label: 'Tiene archivo adjunto', val: 'Sí', dynamic: true },
+      { label: 'Importancia', val: 'Cualquiera' },
+      { label: 'Carpeta', val: 'Bandeja de entrada' },
+    ],
+    outputs: [
+      { label: 'De (remitente)', val: 'triggerOutputs()?[\'from\']' },
+      { label: 'Asunto', val: 'triggerOutputs()?[\'subject\']' },
+      { label: 'Adjuntos', val: 'triggerBody()?[\'hasAttachments\']' },
+    ],
+    logMsg: '📧 Email recibido de region-norte@empresa.com – "Cierre mensual Abril 2026"'
+  },
+  {
+    id: 1,
+    type: 'Acción · SharePoint',
+    badge: 'action',
+    name: 'Guardar adjunto Excel en SharePoint',
+    connector: 'SharePoint',
+    color: '#038387',
+    desc: 'Guarda el Excel adjunto en una biblioteca de SharePoint del CFO Office. La ruta se arma automáticamente por mes, dejando trazabilidad de qué región envió cada archivo y cuándo.',
+    fields: [
+      { label: 'Dirección del sitio', val: 'https://empresa.sharepoint.com/sites/CFO-Office' },
+      { label: 'Ruta de carpeta', val: '/CFO Office/Cierres/@{formatDateTime(utcNow(),\'MMMM-yyyy\')}', dynamic: true },
+      { label: 'Nombre del archivo', val: '@{variables(\'region\')}_Cierre.xlsx', dynamic: true },
+      { label: 'Contenido del archivo', val: 'Contenido del adjunto (base64)', dynamic: true },
+    ],
+    outputs: [
+      { label: 'ID de archivo', val: 'outputs(\'Crear_archivo\')?[\'body/Id\']' },
+      { label: 'Ruta completa', val: 'outputs(\'Crear_archivo\')?[\'body/Path\']' },
+    ],
+    logMsg: '📁 Archivo guardado → /CFO Office/Cierres/Abril-2026/NORTE_Cierre.xlsx'
+  },
+  {
+    id: 2,
+    type: 'Acción · Excel Online (Business)',
+    badge: 'action',
+    name: 'Validar plantilla y listar KPIs estándar',
+    connector: 'Excel Online',
+    color: '#217346',
+    desc: 'Abre el Excel guardado, valida que exista la tabla estándar KPIs_Regionales y lista sus filas para extraer los campos definidos. Esta validación hace que la automatización sea robusta ante archivos mal formateados.',
+    fields: [
+      { label: 'Ubicación', val: 'SharePoint' },
+      { label: 'Biblioteca de documentos', val: 'CFO Office' },
+      { label: 'Archivo', val: 'ID del archivo guardado', dynamic: true },
+      { label: 'Tabla', val: 'KPIs_Regionales' },
+      { label: 'Acción', val: 'Listar filas presentes en una tabla' },
+    ],
+    outputs: [
+      { label: 'Ventas', val: 'body(\'Obtener_fila\')?[\'Ventas\']' },
+      { label: 'EBITDA', val: 'body(\'Obtener_fila\')?[\'EBITDA\']' },
+      { label: 'Headcount', val: 'body(\'Obtener_fila\')?[\'Headcount\']' },
+    ],
+    logMsg: '📊 Plantilla validada y KPIs leídos → Ventas: $4.2M | EBITDA: $890K | HC: 342'
+  },
+  {
+    id: 3,
+    type: 'Acción · Excel Online (Business)',
+    badge: 'action',
+    name: 'Actualizar fila – Planilla maestra de consolidación',
+    connector: 'Excel Online',
+    color: '#217346',
+    desc: 'Vuelca las cifras extraídas en la fila correspondiente a la región dentro de la planilla maestra. Así el CFO tiene un único consolidado actualizado sin copiar y pegar datos manualmente.',
+    fields: [
+      { label: 'Archivo', val: 'Consolidado_CFO_Master.xlsx' },
+      { label: 'Tabla', val: 'Consolidado' },
+      { label: 'Clave (Región)', val: '@{variables(\'regionRemitente\')}', dynamic: true },
+      { label: 'Ventas', val: '@{body(\'Obtener_fila\')?[\'Ventas\']}', dynamic: true },
+      { label: 'EBITDA', val: '@{body(\'Obtener_fila\')?[\'EBITDA\']}', dynamic: true },
+      { label: 'Headcount', val: '@{body(\'Obtener_fila\')?[\'Headcount\']}', dynamic: true },
+      { label: 'Fecha ingreso', val: '@{utcNow()}', dynamic: true },
+    ],
+    outputs: [
+      { label: 'Filas actualizadas', val: '1' },
+    ],
+    logMsg: '✏️  Planilla maestra actualizada → Región NORTE (fila 3/7 completada)'
+  },
+  {
+    id: 4,
+    type: 'Control · Condición',
+    badge: 'condition',
+    name: '¿Cierre regional completo?',
+    connector: 'Control',
+    color: '#ca5010',
+    desc: 'Evalúa el estado de recepción del cierre. Si las 7 regiones ya enviaron información válida, notifica al CFO. Si todavía faltan regiones, deja actualizado el estado para que el flujo programado de recordatorios actúe el 5.º día hábil.',
+    fields: [
+      { label: 'Variable izquierda', val: '@{variables(\'regionesCompletadas\')}', dynamic: true },
+      { label: 'Operador', val: 'es igual a' },
+      { label: 'Valor derecho', val: '7' },
+    ],
+    logMsg: '🔀 Condición evaluada: regionesCompletadas = 3 → Rama NO (faltan 4 regiones)'
+  },
+  {
+    id: 5,
+    type: 'Acción · Outlook',
+    badge: 'action',
+    name: 'Enviar correo – Notificación al CFO',
+    connector: 'Microsoft Outlook',
+    color: '#0078d4',
+    desc: 'Envía un email al CFO cuando el cierre está completo, incluyendo link directo al consolidado en SharePoint y una síntesis de regiones procesadas.',
+    fields: [
+      { label: 'Para', val: 'cfo@empresa.com' },
+      { label: 'Asunto', val: '✅ Cierre completo – @{formatDateTime(utcNow(),\'MMMM yyyy\')}', dynamic: true },
+      { label: 'Cuerpo', val: 'Las 7 regiones enviaron su cierre. Ver planilla: [link]', dynamic: true },
+      { label: 'Importancia', val: 'Alta' },
+    ],
+    logMsg: '✅ Email enviado al CFO → "Cierre Abril 2026 completado – todas las regiones"'
+  },
+  {
+    id: 6,
+    type: 'Acción · Outlook',
+    badge: 'action',
+    name: 'Enviar recordatorio – Regiones faltantes',
+    connector: 'Microsoft Outlook',
+    color: '#0078d4',
+    desc: 'Representa un segundo flujo programado: el 5.º día hábil revisa la planilla maestra, identifica regiones faltantes y envía recordatorios automáticos.',
+    fields: [
+      { label: 'Para', val: '@{variables(\'regionesFaltantes\')}', dynamic: true },
+      { label: 'Asunto', val: '⏰ Recordatorio: Cierre mensual pendiente', dynamic: true },
+      { label: 'Cuerpo', val: 'El cierre mensual vence hoy (5.º día hábil). Por favor envíe el reporte.', dynamic: true },
+      { label: 'Importancia', val: 'Alta' },
+    ],
+    logMsg: '⏰ Recordatorios enviados a: CENTRO, SUR, PATAGONIA, CUYO (4 regiones pendientes)'
+  },
+];
+
+const stepInfo = {
+  historial: {
+    type: 'Historial de ejecución',
+    badge: 'action',
+    name: 'Ejecuciones recientes',
+    color: '#0078d4',
+    bodyHTML: `
+      <div class="sp-section">
+        <div class="sp-section-title">Últimas 7 días</div>
+        <div class="run-history" id="historyList">
+          <div class="history-row"><div class="history-dot hdot-ok"></div><div class="history-name">Región NORTE</div><div class="history-ts">Hoy 09:14</div><div class="history-dur">3.2s</div></div>
+          <div class="history-row"><div class="history-dot hdot-ok"></div><div class="history-name">Región CENTRO</div><div class="history-ts">Hoy 08:52</div><div class="history-dur">2.8s</div></div>
+          <div class="history-row"><div class="history-dot hdot-err"></div><div class="history-name">Región SUR</div><div class="history-ts">Ayer 17:30</div><div class="history-dur">1.1s</div></div>
+          <div class="history-row"><div class="history-dot hdot-ok"></div><div class="history-name">Región CUYO</div><div class="history-ts">Ayer 16:00</div><div class="history-dur">4.0s</div></div>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Estadísticas del mes</div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:#f0fff4;border:1px solid #c6f6d5;border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:#276749;">3</div>
+            <div style="font-size:11px;color:#48bb78;">Completadas</div>
+          </div>
+          <div style="flex:1;background:#fff5f0;border:1px solid #fcd9c5;border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:#9c2a00;">4</div>
+            <div style="font-size:11px;color:#e07040;">Pendientes</div>
+          </div>
+          <div style="flex:1;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px;text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:#1d4ed8;">3.1s</div>
+            <div style="font-size:11px;color:#60a5fa;">Duración media</div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+};
+
+let selectedStep = null;
+let isRunning = false;
+
+// ─── STEP SELECTION ──────────────────────────────────
+function selectStep(idx) {
+  if (selectedStep !== null) {
+    const prev = document.getElementById('step' + selectedStep);
+    if (prev) prev.classList.remove('selected');
+  }
+  selectedStep = idx;
+  const el = document.getElementById('step' + idx);
+  if (el) el.classList.add('selected');
+  openSidePanel(idx);
+}
+
+function openSidePanel(key) {
+  const panel = document.getElementById('sidePanel');
+  panel.classList.add('open');
+
+  if (key === 'historial') {
+    const info = stepInfo.historial;
+    renderSidePanel(info.color, info.badge, info.type, info.name, info.bodyHTML);
+    return;
+  }
+
+  const s = steps[key];
+  if (!s) return;
+
+  const badgeLabel = { trigger: '⚡ Disparador', action: '▶ Acción', condition: '⬡ Condición' };
+  const badgeClass = { trigger: 'badge-trigger', action: 'badge-action', condition: 'badge-condition' };
+
+  let html = `
+    <div class="sp-section">
+      <div class="sp-section-title">Descripción</div>
+      <p style="font-size:12px;color:var(--pa-text2);line-height:1.6;">${s.desc}</p>
+    </div>
+    <div class="sp-section">
+      <div class="sp-section-title">Parámetros</div>
+  `;
+  s.fields.forEach(f => {
+    html += `<div class="sp-field">
+      <label>${f.label}</label>
+      <input class="sp-input" value="${f.val.replace(/"/g,'&quot;')}" readonly>
+    </div>`;
+  });
+  html += `</div>`;
+
+  if (s.outputs) {
+    html += `<div class="sp-section">
+      <div class="sp-section-title">Salidas dinámicas disponibles</div>`;
+    s.outputs.forEach(o => {
+      html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:11px;color:var(--pa-text2);min-width:90px;">${o.label}</span>
+        <span class="param-val dynamic" style="font-size:11px;">${o.val}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  renderSidePanel(s.color, badgeClass[s.badge], badgeLabel[s.badge], s.name, html);
+}
+
+function renderSidePanel(color, badgeClass, badgeLabel, title, bodyHTML) {
+  document.getElementById('spIcon').style.background = color;
+  document.getElementById('spBadge').innerHTML = `<span class="sp-badge ${badgeClass}">${badgeLabel}</span>`;
+  document.getElementById('spTitle').textContent = title;
+  document.getElementById('spBody').innerHTML = bodyHTML;
+}
+
+function closeSidePanel() {
+  document.getElementById('sidePanel').classList.remove('open');
+  if (selectedStep !== null) {
+    const el = document.getElementById('step' + selectedStep);
+    if (el) el.classList.remove('selected');
+    selectedStep = null;
+  }
+}
+
+
+
+// ─── BUSINESS PREVIEW PANEL ──────────────────────────
+function setBusinessStage(idx) {
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('bp' + i);
+    if (!el) continue;
+    el.classList.remove('active','done');
+    if (i < idx) el.classList.add('done');
+    if (i === idx) el.classList.add('active');
+  }
+}
+function resetBusinessPanel() { setBusinessStage(0); }
+function completeBusinessPanel() {
+  for (let i = 0; i <= 4; i++) {
+    const el = document.getElementById('bp' + i);
+    if (el) { el.classList.remove('active'); el.classList.add('done'); }
+  }
+}
+
+// ─── DEMO RUN ────────────────────────────────────────
+const demoSeq = [
+  { step: 0, line: 0, bp: 0, msg: 'Email recibido con adjunto Excel...', prog: 8, delay: 600 },
+  { step: 1, line: 1, bp: 1, msg: 'Guardando archivo en SharePoint /Cierres/Abril-2026...', prog: 25, delay: 900 },
+  { step: 2, line: 2, bp: 2, msg: 'Validando plantilla y leyendo KPIs del Excel...', prog: 45, delay: 900 },
+  { step: 3, line: 3, bp: 3, msg: 'Actualizando planilla maestra de consolidación...', prog: 65, delay: 900 },
+  { step: 4, msg: 'Evaluando condición: ¿7/7 regiones?', prog: 78, delay: 700 },
+  { step: 6, bp: 4, msg: 'Actualizando lista de pendientes para recordatorio programado...', prog: 90, delay: 900 },
+  { done: true, msg: '✅ Flujo completado en 3.2s', prog: 100, delay: 600 },
+];
+
+async function startDemo() {
+  if (isRunning) return;
+  isRunning = true;
+
+  const btn = document.getElementById('btnRun');
+  btn.classList.add('running');
+  btn.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Ejecutando...`;
+
+  // reset
+  resetBusinessPanel();
+  for (let i = 0; i <= 6; i++) {
+    const el = document.getElementById('step' + i);
+    if (el) el.classList.remove('running-step','done-step','error-step','selected');
+    const si = document.getElementById('si' + i);
+    if (si) { si.className = 'step-status-icon'; si.textContent = ''; }
+    const ln = document.getElementById('line' + i);
+    if (ln) ln.classList.remove('active','done');
+  }
+
+  // reset status
+  const dot = document.getElementById('statusDot');
+  dot.className = 'flow-status-dot running';
+  document.getElementById('statusLabel').textContent = 'Ejecutando...';
+
+  // open log panel
+  openLogPanel();
+  showToast('⚡ Ejecutando flujo...', 'Email de región NORTE detectado', 0);
+
+  for (const frame of demoSeq) {
+    await sleep(frame.delay);
+    updateToast(frame.msg, frame.prog);
+    if (frame.bp !== undefined) setBusinessStage(frame.bp);
+
+    if (frame.done) {
+      dot.className = 'flow-status-dot active';
+      document.getElementById('statusLabel').textContent = 'Última ejecución: hace unos segundos · Exitosa';
+      addLog('ok', '✅ Ejecución completada exitosamente (3.2s)');
+      completeBusinessPanel();
+      showToast('✅ Flujo completado', 'Todas las acciones ejecutadas', 100);
+      await sleep(600);
+      markStepDone(demoSeq[demoSeq.length - 2].step);
+      break;
+    }
+
+    // prev done
+    const prevIdx = demoSeq.indexOf(frame) - 1;
+    if (prevIdx >= 0 && demoSeq[prevIdx].step !== undefined) {
+      markStepDone(demoSeq[prevIdx].step);
+      if (demoSeq[prevIdx].line !== undefined) markLineDone(demoSeq[prevIdx].line);
+    }
+
+    // current running
+    markStepRunning(frame.step);
+    if (frame.line !== undefined) markLineActive(frame.line);
+    addLog('run', steps[frame.step]?.logMsg || frame.msg);
+  }
+
+  await sleep(1800);
+  hideToast();
+  isRunning = false;
+  btn.classList.remove('running');
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 16 16" fill="white"><path d="M4 2l10 6-10 6V2z"/></svg> Ejecutar demo`;
+}
+
+function markStepRunning(idx) {
+  const el = document.getElementById('step' + idx);
+  if (!el) return;
+  el.classList.add('running-step');
+  el.classList.remove('done-step');
+  const si = document.getElementById('si' + idx);
+  if (si) {
+    si.className = 'step-status-icon status-running show';
+    si.textContent = '⟳';
+  }
+}
+
+function markStepDone(idx) {
+  const el = document.getElementById('step' + idx);
+  if (!el) return;
+  el.classList.remove('running-step');
+  el.classList.add('done-step');
+  const si = document.getElementById('si' + idx);
+  if (si) {
+    si.className = 'step-status-icon status-done show';
+    si.textContent = '✓';
+  }
+}
+
+function markLineActive(idx) {
+  const ln = document.getElementById('line' + idx);
+  if (ln) { ln.classList.add('active'); ln.classList.remove('done'); }
+}
+function markLineDone(idx) {
+  const ln = document.getElementById('line' + idx);
+  if (ln) { ln.classList.remove('active'); ln.classList.add('done'); }
+}
+
+// ─── TOAST ───────────────────────────────────────────
+function showToast(title, msg, prog) {
+  const t = document.getElementById('runToast');
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastBar').style.width = prog + '%';
+  t.classList.add('show');
+}
+function updateToast(msg, prog) {
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastBar').style.width = prog + '%';
+}
+function hideToast() {
+  document.getElementById('runToast').classList.remove('show');
+}
+
+// ─── LOG PANEL ───────────────────────────────────────
+let logOpen = false;
+function openLogPanel() {
+  openSidePanel(-1); // force open with log content
+
+  const panel = document.getElementById('sidePanel');
+  panel.classList.add('open');
+
+  document.getElementById('spIcon').style.background = '#1e1e1e';
+  document.getElementById('spBadge').innerHTML = `<span class="sp-badge" style="background:#1e1e1e;color:#4ec9b0;">⚡ En ejecución</span>`;
+  document.getElementById('spTitle').textContent = 'Log de ejecución en vivo';
+  document.getElementById('spBody').innerHTML = `
+    <div class="sp-section">
+      <div class="sp-section-title">Registro de acciones</div>
+      <div class="run-log" id="runLog">
+        <div class="log-line"><span class="log-ts">[${now()}]</span> <span class="log-run">Iniciando flujo...</span></div>
+      </div>
+    </div>
+    <div class="sp-section" style="margin-top:16px;">
+      <div class="sp-section-title">Variables de flujo</div>
+      <div style="font-size:11px;font-family:Consolas,monospace;line-height:2;">
+        <div><span style="color:#9cdcfe;">regionRemitente</span> = <span style="color:#ce9178;">"NORTE"</span></div>
+        <div><span style="color:#9cdcfe;">regionesCompletadas</span> = <span style="color:#b5cea8;">3</span></div>
+        <div><span style="color:#9cdcfe;">regionesFaltantes</span> = <span style="color:#ce9178;">["CENTRO","SUR","NEA","PATAGONIA"]</span></div>
+        <div><span style="color:#9cdcfe;">plantillaValida</span> = <span style="color:#b5cea8;">true</span></div>
+        <div><span style="color:#9cdcfe;">mesActual</span> = <span style="color:#ce9178;">"Abril-2026"</span></div>
+      </div>
+    </div>
+  `;
+}
+
+function addLog(type, msg) {
+  const log = document.getElementById('runLog');
+  if (!log) return;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-ts">[${now()}]</span> <span class="log-${type}">${msg}</span>`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function now() {
+  return new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── CSS SPIN ────────────────────────────────────────
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+resetBusinessPanel();
+</script>
+</body>
+</html>
