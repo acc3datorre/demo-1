@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { steps, stepInfo, demoSeq } from './data.js';
-import { sleep, now, escapeAttr, $id } from './utils.js';
+import { sleep, escapeAttr, $id } from './utils.js';
 import { initTheme, toggleTheme } from './theme.js';
 
 let selectedStep = null;
@@ -30,9 +30,6 @@ function openSidePanel(key) {
     renderSidePanel(info.color, info.badge, info.type, info.name, info.bodyHTML);
     return;
   }
-
-  // -1 lo usa openLogPanel para abrir el panel sin contenido de step
-  if (key === -1) return;
 
   const s = steps[key];
   if (!s) return;
@@ -131,8 +128,6 @@ async function startDemo() {
   dot.className = 'flow-status-dot running';
   $id('statusLabel').textContent = 'Ejecutando...';
 
-  // open log panel
-  openLogPanel();
   showToast('⚡ Ejecutando flujo...', 'Email de región NORTE detectado', 0);
 
   for (const frame of demoSeq) {
@@ -143,7 +138,6 @@ async function startDemo() {
     if (frame.done) {
       dot.className = 'flow-status-dot active';
       $id('statusLabel').textContent = 'Última ejecución: hace unos segundos · Exitosa';
-      addLog('ok', '✅ Ejecución completada exitosamente (3.2s)');
       completeBusinessPanel();
       showToast('✅ Flujo completado', 'Todas las acciones ejecutadas', 100);
       await sleep(600);
@@ -161,7 +155,6 @@ async function startDemo() {
     // current running
     markStepRunning(frame.step);
     if (frame.line !== undefined) markLineActive(frame.line);
-    addLog('run', steps[frame.step]?.logMsg || frame.msg);
   }
 
   await sleep(1800);
@@ -219,36 +212,6 @@ function updateToast(msg, prog) {
 }
 function hideToast() {
   $id('runToast').classList.remove('show');
-}
-
-// ─── LOG PANEL ───────────────────────────────────────
-function openLogPanel() {
-  openSidePanel(-1);
-
-  const panel = $id('sidePanel');
-  panel.classList.add('open');
-
-  $id('spIcon').style.background = '#1e1e1e';
-  $id('spBadge').innerHTML = `<span class="sp-badge" style="background:#1e1e1e;color:#4ec9b0;">⚡ En ejecución</span>`;
-  $id('spTitle').textContent = 'Log de ejecución en vivo';
-  $id('spBody').innerHTML = `
-    <div class="sp-section">
-      <div class="sp-section-title">Registro de acciones</div>
-      <div class="run-log" id="runLog">
-        <div class="log-line"><span class="log-ts">[${now()}]</span> <span class="log-run">Iniciando flujo...</span></div>
-      </div>
-    </div>
-  `;
-}
-
-function addLog(type, msg) {
-  const log = $id('runLog');
-  if (!log) return;
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  line.innerHTML = `<span class="log-ts">[${now()}]</span> <span class="log-${type}">${msg}</span>`;
-  log.appendChild(line);
-  log.scrollTop = log.scrollHeight;
 }
 
 // ─── EVENT WIRING ─────────────────────────────────────
