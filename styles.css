@@ -46,34 +46,51 @@
   --step-w: 320px;
 }
 
-/* Tema oscuro */
+/* Tema oscuro - paleta premium */
 [data-theme="dark"] {
-  --bg-app: #0d1117;
-  --bg-canvas: #161b22;
-  --bg-canvas-dot: #30363d;
-  --bg-card: #21262d;
-  --bg-card-soft: #1c2128;
-  --bg-topbar: #010409;
+  /* Fondos con jerarquía: app más oscuro, canvas medio, cards elevadas */
+  --bg-app: #0a0d12;
+  --bg-canvas: #0f1318;
+  --bg-canvas-dot: #1c232c;
+  --bg-card: #161c24;
+  --bg-card-soft: #131820;
+  --bg-topbar: #07090d;
   --bg-input: #0d1117;
-  --bg-chip: #30363d;
+  --bg-chip: #1f262f;
 
-  --text-1: #e6edf3;
-  --text-2: #8b949e;
-  --text-muted: #6e7681;
+  /* Textos con escala clara de jerarquía */
+  --text-1: #e8eef5;     /* alto contraste para títulos y valores */
+  --text-2: #98a2af;     /* secundario, labels */
+  --text-muted: #6b7380;
 
-  --border-1: #30363d;
-  --border-2: #444c56;
-  --line-color: #484f58;
+  /* Bordes sutiles pero perceptibles */
+  --border-1: #232c37;
+  --border-2: #2c3744;
+  --line-color: #3a4654;
 
-  --gray-1: #21262d;
-  --gray-2: #30363d;
-  --gray-3: #484f58;
+  --gray-1: #1a2029;
+  --gray-2: #232c37;
+  --gray-3: #3a4654;
 
-  --pa-blue-light: #1f3b56;
+  /* Acento dinámico legible sobre fondo oscuro */
+  --pa-blue-light: #1a324d;
 
-  --shadow-card: 0 1px 4px rgba(0,0,0,.4);
-  --shadow-card-hover: 0 2px 12px rgba(0,120,212,.4);
-  --shadow-toolbar: 0 2px 12px rgba(0,0,0,.5);
+  /* Done state profesional: teal en lugar de verde Power Automate */
+  --pa-success: #2dd4bf;
+
+  /* Sombras con más profundidad y un toque de luz interior */
+  --shadow-card:
+    0 1px 0 rgba(255,255,255,.025) inset,
+    0 1px 2px rgba(0,0,0,.4),
+    0 2px 6px rgba(0,0,0,.35);
+  --shadow-card-hover:
+    0 1px 0 rgba(255,255,255,.04) inset,
+    0 4px 16px rgba(0,120,212,.3),
+    0 2px 6px rgba(0,0,0,.4);
+  --shadow-toolbar:
+    0 1px 0 rgba(255,255,255,.03) inset,
+    0 6px 24px rgba(0,0,0,.6),
+    0 2px 6px rgba(0,0,0,.4);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -889,3 +906,207 @@ body {
 /* CSS-only spin animation */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 1s linear infinite; display: inline-block; }
+
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE · refinamientos premium
+   Capa de overrides para subir contraste, jerarquía y profundidad
+   ═══════════════════════════════════════════════════════════ */
+
+/* App body y canvas: vignette sutil que da profundidad */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, #0e131a 0%, var(--bg-app) 70%);
+}
+[data-theme="dark"] .canvas {
+  background-color: var(--bg-canvas);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 50% 30%, rgba(15,108,189,.04) 0%, transparent 60%),
+    radial-gradient(var(--bg-canvas-dot) 1px, transparent 1px);
+  background-size: auto, 22px 22px;
+}
+
+/* Cards con gradiente interno suave + borde con highlight superior */
+[data-theme="dark"] .step-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.018) 0%, transparent 100%),
+    var(--bg-card);
+  border-color: var(--border-1);
+}
+[data-theme="dark"] .step-card:hover {
+  border-color: rgba(15,108,189,.65);
+  background:
+    linear-gradient(180deg, rgba(15,108,189,.04) 0%, transparent 60%),
+    var(--bg-card);
+}
+[data-theme="dark"] .step-card.selected {
+  border-color: var(--pa-running);
+  box-shadow:
+    0 0 0 3px rgba(0,120,212,.18),
+    0 1px 0 rgba(255,255,255,.04) inset,
+    0 4px 14px rgba(0,0,0,.4);
+}
+[data-theme="dark"] .step-card.running-step {
+  border-color: var(--pa-running);
+  background:
+    linear-gradient(180deg, rgba(0,120,212,.08) 0%, transparent 70%),
+    var(--bg-card);
+}
+[data-theme="dark"] .step-card.done-step {
+  border-color: rgba(45,212,191,.5);
+  box-shadow:
+    0 0 0 1px rgba(45,212,191,.12),
+    0 1px 0 rgba(255,255,255,.03) inset,
+    0 2px 6px rgba(0,0,0,.35);
+  background:
+    linear-gradient(180deg, rgba(45,212,191,.04) 0%, transparent 70%),
+    var(--bg-card);
+}
+
+/* Status icons en dark: más visibles */
+[data-theme="dark"] .status-running { background: rgba(0,120,212,.22); color: #58a6ff; }
+[data-theme="dark"] .status-done { background: rgba(45,212,191,.18); color: #5eead4; }
+[data-theme="dark"] .status-error { background: rgba(248,113,113,.18); color: #fca5a5; }
+
+/* Step body en dark: fondo levemente diferente para separar del header */
+[data-theme="dark"] .step-body {
+  background: rgba(0,0,0,.18);
+  border-top-color: rgba(255,255,255,.04);
+}
+
+/* Param chips: el chip "dynamic" estaba ilegible — vuelta de tuerca */
+[data-theme="dark"] .param-val {
+  background: rgba(255,255,255,.04);
+  color: var(--text-1);
+  border-color: rgba(255,255,255,.06);
+}
+[data-theme="dark"] .param-val.dynamic {
+  background: rgba(88,166,255,.10);
+  color: #79b8ff;
+  border-color: rgba(88,166,255,.25);
+}
+[data-theme="dark"] .param-key { color: var(--text-2); }
+
+/* Connector lines un poco más visibles cuando están activos */
+[data-theme="dark"] .connector-line.done {
+  background: var(--pa-success);
+  box-shadow: 0 0 6px rgba(45,212,191,.4);
+}
+[data-theme="dark"] .connector-line.done::before { border-top-color: var(--pa-success); }
+[data-theme="dark"] .connector-line.active {
+  box-shadow: 0 0 8px rgba(0,120,212,.5);
+}
+
+/* Scope bracket (la condición) — fondo y label más prolijos */
+[data-theme="dark"] .scope-bracket {
+  background: rgba(255,255,255,.012);
+  border-color: rgba(255,255,255,.07);
+}
+[data-theme="dark"] .scope-label {
+  background: var(--bg-canvas);
+  color: var(--text-2);
+}
+
+/* Branch labels (Sí / No) más vivos en dark */
+[data-theme="dark"] .branch-yes { background: rgba(45,212,191,.16); color: #5eead4; }
+[data-theme="dark"] .branch-no { background: rgba(251,146,60,.16); color: #fdba74; }
+
+/* Status dot del header */
+[data-theme="dark"] .flow-status-dot.active {
+  background: var(--pa-success);
+  box-shadow: 0 0 0 3px rgba(45,212,191,.18);
+}
+
+/* Business panel: stages con más identidad */
+[data-theme="dark"] .business-panel { background: var(--bg-card-soft); }
+[data-theme="dark"] .bp-stage {
+  background: var(--bg-card);
+  border-color: var(--border-1);
+}
+[data-theme="dark"] .bp-stage.active {
+  border-color: rgba(15,108,189,.6);
+  box-shadow:
+    0 0 0 1px rgba(15,108,189,.2),
+    0 4px 18px rgba(0,120,212,.18),
+    0 1px 0 rgba(255,255,255,.03) inset;
+}
+[data-theme="dark"] .bp-stage.done {
+  border-color: rgba(45,212,191,.35);
+}
+[data-theme="dark"] .bp-stage.done .bp-check { color: var(--pa-success); }
+[data-theme="dark"] .bp-stage-head {
+  background: rgba(255,255,255,.02);
+  border-bottom-color: rgba(255,255,255,.04);
+}
+
+/* Email/folder/excel: tintes oscuros consistentes en dark */
+[data-theme="dark"] .email-card,
+[data-theme="dark"] .folder-list,
+[data-theme="dark"] .excel-table {
+  background: rgba(0,0,0,.2);
+  border-color: rgba(255,255,255,.06);
+}
+[data-theme="dark"] .email-top {
+  background: rgba(255,255,255,.025);
+  border-bottom-color: rgba(255,255,255,.05);
+}
+[data-theme="dark"] .folder-row { border-bottom-color: rgba(255,255,255,.04); }
+[data-theme="dark"] .excel-table th,
+[data-theme="dark"] .excel-table td { border-bottom-color: rgba(255,255,255,.04); }
+[data-theme="dark"] .excel-table th {
+  background: rgba(45,212,191,.10);
+  color: #5eead4;
+}
+[data-theme="dark"] .attachment {
+  background: rgba(45,212,191,.12);
+  border-color: rgba(45,212,191,.3);
+  color: #5eead4;
+}
+[data-theme="dark"] .bp-note {
+  background: rgba(88,166,255,.08);
+  border-color: rgba(88,166,255,.22);
+  color: var(--text-2);
+}
+
+/* Side panel header un poco más diferenciado */
+[data-theme="dark"] .sp-header {
+  background: rgba(255,255,255,.02);
+  border-bottom-color: rgba(255,255,255,.05);
+}
+
+/* Subnav active line glow sutil */
+[data-theme="dark"] .subnav { background: var(--bg-canvas); border-bottom-color: var(--border-1); }
+[data-theme="dark"] .subnav-tab.active {
+  color: #58a6ff;
+}
+[data-theme="dark"] .subnav-tab.active::after {
+  background: #58a6ff;
+  box-shadow: 0 0 8px rgba(88,166,255,.5);
+}
+
+/* Canvas toolbar */
+[data-theme="dark"] .canvas-toolbar {
+  background: rgba(22,28,36,.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: rgba(255,255,255,.06);
+}
+
+/* Toast en dark */
+[data-theme="dark"] .run-toast {
+  background: rgba(22,28,36,.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(255,255,255,.08);
+  border-left-color: var(--pa-running);
+}
+
+/* Historial: filas y stats con paleta dark */
+[data-theme="dark"] .history-row { background: rgba(255,255,255,.02); }
+[data-theme="dark"] .history-row:hover { background: rgba(255,255,255,.04); border-color: var(--border-2); }
+
+/* Tipografía: textos importantes con un poco más de presencia en dark */
+[data-theme="dark"] .step-name,
+[data-theme="dark"] .bp-name,
+[data-theme="dark"] .flow-title {
+  letter-spacing: -.1px;
+}
