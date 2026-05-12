@@ -238,16 +238,6 @@ function openLogPanel() {
         <div class="log-line"><span class="log-ts">[${now()}]</span> <span class="log-run">Iniciando flujo...</span></div>
       </div>
     </div>
-    <div class="sp-section" style="margin-top:16px;">
-      <div class="sp-section-title">Variables de flujo</div>
-      <div style="font-size:11px;font-family:Consolas,monospace;line-height:2;">
-        <div><span style="color:#9cdcfe;">regionRemitente</span> = <span style="color:#ce9178;">"NORTE"</span></div>
-        <div><span style="color:#9cdcfe;">regionesCompletadas</span> = <span style="color:#b5cea8;">3</span></div>
-        <div><span style="color:#9cdcfe;">regionesFaltantes</span> = <span style="color:#ce9178;">["CENTRO","SUR","NEA","PATAGONIA"]</span></div>
-        <div><span style="color:#9cdcfe;">plantillaValida</span> = <span style="color:#b5cea8;">true</span></div>
-        <div><span style="color:#9cdcfe;">mesActual</span> = <span style="color:#ce9178;">"Abril-2026"</span></div>
-      </div>
-    </div>
   `;
 }
 
