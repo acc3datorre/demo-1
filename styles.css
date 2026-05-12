@@ -255,7 +255,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px 20px 60px;
+  padding: 32px 20px 32px;
   position: relative;
 }
 
@@ -769,40 +769,6 @@ body {
 [data-theme="dark"] .badge-action { background: #0d2c4a; color: #64b5f6; }
 [data-theme="dark"] .badge-condition { background: #4a2d0d; color: #ffb74d; }
 
-/* ─── TOOLBAR ─────────────────────────────────────── */
-.canvas-toolbar {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-card);
-  border: 1px solid var(--border-1);
-  border-radius: 10px;
-  padding: 7px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: var(--shadow-toolbar);
-  font-size: 12px;
-  color: var(--text-2);
-  flex-wrap: wrap;
-  max-width: calc(100% - 40px);
-  letter-spacing: .1px;
-}
-.toolbar-sep { width: 1px; height: 18px; background: var(--gray-3); }
-.zoom-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-2);
-  font-size: 16px;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  transition: background .15s var(--ease), color .15s var(--ease);
-}
-.zoom-btn:hover { background: var(--gray-1); color: var(--text-1); }
-
 .ico { display: inline-block; vertical-align: middle; }
 
 /* ─── RUN TOAST ─────────────────────────────────── */
@@ -1081,14 +1047,6 @@ body {
 [data-theme="dark"] .subnav-tab.active::after {
   background: #58a6ff;
   box-shadow: 0 0 8px rgba(88,166,255,.5);
-}
-
-/* Canvas toolbar */
-[data-theme="dark"] .canvas-toolbar {
-  background: rgba(22,28,36,.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-color: rgba(255,255,255,.06);
 }
 
 /* Toast en dark */
